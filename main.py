@@ -9,12 +9,11 @@ try:
     Q = Q_loaded
 except FileNotFoundError as e:
     Q = np.zeros(shape=(env.observation_space.n, env.action_space.n))
-    # Q = np.abs(np.random.randn(env.observation_space.n, env.action_space.n)/1000)
 
 gamma = 0.999
 learning_rate = 0.85
 LAST_STATE = 15
-episode_count = 50000
+episode_count = 5000
 
 
 def get_max_q(state):
@@ -39,12 +38,16 @@ def get_next_action(state):
 
 env.render()
 rewards = []
+eps = 0
 for i_episode in range(episode_count):
     observation = env.reset()
     r = 0
+    # 100 step maximum for the episode
     for t in range(100):
         prev_obs = observation
+        # Decreasing epsilon so the algorithm can converge
         epsilon = 1/(i_episode + 1)
+        # Epsilon-greedy exploration
         if np.random.uniform(0, 1) < epsilon:
             action = env.action_space.sample()
         else:
@@ -54,9 +57,10 @@ for i_episode in range(episode_count):
         r += reward
         if done:
             break
-    rewards.append(r)
+    if i_episode > episode_count - 500:
+        rewards.append(r)
 
 print(Q)
-print(sum(rewards)/episode_count)
+print("Accuracy: " + str(sum(rewards)/500))
 
 np.save("./" + ENV_NAME, Q)
